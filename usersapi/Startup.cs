@@ -20,15 +20,21 @@ namespace usersapi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
-
             services.AddDbContext<UserContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer("Server=db, 1433;Initial Catalog=UsersDb;User Id=sa;Password=Password_22"));
+            
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddFile("Logs/usersapi-{Date}.txt");
+            
+            using (IServiceScope scope = app.ApplicationServices.CreateScope())
+            {
+                scope.ServiceProvider.GetService<UserContext>().Database.Migrate();
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
